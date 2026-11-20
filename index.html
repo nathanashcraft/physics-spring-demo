@@ -1,0 +1,679 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f7f8">
+  <title>Spring Lab — See what changes</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172b3a;
+      --muted: #627482;
+      --line: #dce5e8;
+      --paper: #ffffff;
+      --canvas: #f3f7f8;
+      --teal: #087e83;
+      --teal-dark: #06676c;
+      --teal-pale: #e8f5f4;
+      --orange: #e78a48;
+      --shadow: 0 16px 40px rgba(34, 67, 79, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    button, input { font: inherit; }
+
+    .page {
+      width: min(1120px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 54px 0 48px;
+    }
+
+    .intro { margin: 0 0 27px; }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--teal);
+      font-size: .76rem;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3rem);
+      letter-spacing: -.045em;
+      line-height: 1.08;
+    }
+
+    .lede {
+      max-width: 650px;
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(320px, .9fr);
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .card {
+      overflow: hidden;
+      border: 1px solid rgba(216, 228, 231, .9);
+      border-radius: 22px;
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .scene-card { display: flex; flex-direction: column; }
+
+    .card-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 22px 24px 0;
+    }
+
+    .card-heading h2, .controls-card h2 {
+      margin: 0;
+      font-size: 1.08rem;
+      letter-spacing: -.015em;
+    }
+
+    .card-heading p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: .86rem;
+    }
+
+    .state {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: 1px solid #d8eae7;
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: #f3faf8;
+      color: var(--teal-dark);
+      font-size: .75rem;
+      font-weight: 700;
+    }
+
+    .state::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #46a28d;
+      content: "";
+    }
+
+    .state.running::before { background: var(--orange); box-shadow: 0 0 0 3px #faeee5; }
+
+    .scene-wrap {
+      position: relative;
+      display: grid;
+      min-height: 390px;
+      flex: 1;
+      place-items: center;
+      padding: 4px 18px 2px;
+      background-image: radial-gradient(#dbe6e8 .8px, transparent .8px);
+      background-position: center;
+      background-size: 20px 20px;
+    }
+
+    #springScene { display: block; width: min(100%, 430px); height: auto; overflow: visible; }
+
+    .scene-footnote {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 24px 18px;
+      color: var(--muted);
+      font-size: .8rem;
+    }
+
+    .scene-footnote svg { flex: 0 0 auto; color: var(--teal); }
+
+    .scene-readouts { margin: 0; padding: 0 24px 17px; }
+
+    .controls-card { padding: 23px 24px 22px; }
+
+    .section-note {
+      margin: 5px 0 20px;
+      color: var(--muted);
+      font-size: .86rem;
+    }
+
+    .control { margin: 0 0 19px; }
+
+    .mode-picker {
+      margin: 0 0 18px;
+      border: 0;
+      padding: 0;
+    }
+
+    .mode-picker legend { margin-bottom: 8px; font-size: .89rem; font-weight: 700; }
+
+    .mode-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .mode-option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      padding: 8px 10px;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: .82rem;
+      font-weight: 700;
+    }
+
+    .mode-option:has(input:checked) {
+      border-color: #8ecac5;
+      background: var(--teal-pale);
+      color: var(--teal-dark);
+    }
+
+    .mode-option input { margin: 0; accent-color: var(--teal); }
+
+    .control-top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 9px;
+    }
+
+    .control label { font-size: .89rem; font-weight: 700; }
+    .value { color: var(--teal-dark); font-size: .88rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .control-help { margin: -5px 0 8px; color: var(--muted); font-size: .76rem; }
+
+    input[type="range"] {
+      display: block;
+      width: 100%;
+      height: 22px;
+      margin: 0;
+      accent-color: var(--teal);
+      cursor: pointer;
+    }
+
+    .range-ends {
+      display: flex;
+      justify-content: space-between;
+      color: #81909a;
+      font-size: .72rem;
+    }
+
+    .force-control { margin-bottom: 20px; }
+
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 4px; }
+
+    .primary, .secondary {
+      min-height: 46px;
+      border-radius: 12px;
+      padding: 10px 15px;
+      cursor: pointer;
+      font-weight: 750;
+      transition: transform .15s ease, background .15s ease, box-shadow .15s ease;
+    }
+
+    .primary {
+      grid-column: 1 / -1;
+      border: 1px solid var(--teal);
+      background: var(--teal);
+      color: white;
+      box-shadow: 0 5px 12px rgba(8, 126, 131, .15);
+    }
+
+    .primary:hover { transform: translateY(-1px); background: var(--teal-dark); box-shadow: 0 7px 16px rgba(8, 126, 131, .2); }
+    .secondary { border: 1px solid var(--line); background: white; color: var(--ink); }
+    .secondary:hover { background: #f5f8f9; }
+    button:disabled { cursor: not-allowed; opacity: .52; transform: none; box-shadow: none; }
+    button:focus-visible, input:focus-visible { outline: 3px solid #8ccac5; outline-offset: 3px; }
+
+    .readouts {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 22px;
+    }
+
+    .metric {
+      min-width: 0;
+      border: 1px solid #e3eaec;
+      border-radius: 13px;
+      padding: 11px 10px 12px;
+      background: #fbfcfc;
+    }
+
+    .metric-label { display: block; color: var(--muted); font-size: .7rem; font-weight: 650; }
+    .metric-value { display: block; margin-top: 3px; font-size: 1rem; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .metric-value small { color: var(--muted); font-size: .7rem; font-weight: 650; }
+
+    .hint {
+      margin: 14px 0 0;
+      border-left: 3px solid #abd7d1;
+      padding: 2px 0 2px 11px;
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    @media (max-width: 780px) {
+      .page { width: min(620px, calc(100% - 28px)); padding-top: 36px; }
+      .layout { grid-template-columns: 1fr; }
+      .scene-wrap { min-height: 330px; }
+      #springScene { width: min(100%, 380px); }
+    }
+
+    @media (max-width: 420px) {
+      .page { width: calc(100% - 20px); padding-top: 26px; }
+      .card-heading { padding-right: 16px; padding-left: 16px; }
+      .controls-card { padding: 20px 17px; }
+      .scene-wrap { min-height: 290px; padding-right: 4px; padding-left: 4px; }
+      .scene-readouts { padding-right: 16px; padding-left: 16px; }
+      .scene-footnote { padding-right: 16px; padding-left: 16px; }
+      .readouts { gap: 5px; }
+      .metric { padding-right: 7px; padding-left: 7px; }
+      .metric-value { font-size: .91rem; }
+    }
+
+    @media (max-width: 360px) {
+      .card-heading { gap: 8px; }
+      .state { padding: 5px 8px; font-size: .68rem; }
+      .scene-wrap { min-height: 260px; }
+      .readouts { grid-template-columns: 1fr; }
+      .metric { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 10px; }
+      .metric-value { margin-top: 0; }
+      .range-ends { gap: 8px; }
+      .range-ends span:last-child { text-align: right; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="intro">
+      <p class="eyebrow">INTERACTIVE PHYSICS LAB</p>
+      <h1>See How the Spring Reacts</h1>
+      <p class="lede">Adjust the spring and the load, then release it. Watch how stiffness and resting length shape the motion.</p>
+    </header>
+
+    <section class="layout" aria-label="Spring demonstration">
+      <article class="card scene-card">
+        <div class="card-heading">
+          <div>
+            <h2>Your spring</h2>
+            <p>Side view · downward force stretches the spring</p>
+          </div>
+          <span class="state" id="motionState" aria-live="polite">At rest</span>
+        </div>
+        <div class="readouts scene-readouts" role="group" aria-label="Live spring measurements">
+          <div class="metric"><span class="metric-label" id="loadMetricLabel">Applied force</span><span class="metric-value" id="loadReadout">+7.0 <small>N</small></span></div>
+          <div class="metric"><span class="metric-label">Current length</span><span class="metric-value" id="lengthReadout">1.00 <small>m</small></span></div>
+          <div class="metric"><span class="metric-label">Stretch / compression</span><span class="metric-value" id="changeReadout">0.00 <small>m</small></span></div>
+        </div>
+        <div class="scene-wrap">
+          <svg id="springScene" viewBox="0 0 420 440" role="img" aria-labelledby="sceneTitle sceneDescription">
+            <title id="sceneTitle">Animated spring under a load</title>
+            <desc id="sceneDescription">A vertical spring hangs from a support. Its length changes as it responds to an applied force or a hanging mass.</desc>
+            <defs>
+              <linearGradient id="coilGradient" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0" stop-color="#087e83" stop-opacity=".72" />
+                <stop offset=".48" stop-color="#42aaa3" />
+                <stop offset="1" stop-color="#06676c" />
+              </linearGradient>
+              <marker id="arrowHead" viewBox="0 0 12 12" markerWidth="14" markerHeight="14" refX="0" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+                <path d="M 0 0 L 12 6 L 0 12 z" fill="#e78a48" />
+              </marker>
+            </defs>
+            <path d="M 112 77 H 308 M 132 77 V 91 M 288 77 V 91" fill="none" stroke="#263e4c" stroke-width="8" stroke-linecap="round" />
+            <path id="springCoil" d="" fill="none" stroke="url(#coilGradient)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
+            <line id="centerLine" x1="210" x2="210" y1="97" y2="110" stroke="#a9bfbe" stroke-width="2" stroke-dasharray="3 6" />
+            <line id="restMarker" x1="292" x2="320" y1="0" y2="0" stroke="#91a4ac" stroke-width="2" stroke-dasharray="3 4" />
+            <text id="restMarkerLabel" x="326" y="0" fill="#71838d" font-size="11" font-weight="700">rest</text>
+            <rect id="endPlate" x="168" y="0" width="84" height="16" rx="7" fill="#f7c896" stroke="#cb8250" stroke-width="2" />
+            <text id="massLabel" x="210" y="0" text-anchor="middle" fill="#72482d" font-size="11" font-weight="800" visibility="hidden">0.70 kg</text>
+            <circle id="endDot" cx="210" cy="0" r="5" fill="#e78a48" />
+            <line id="forceArrow" x1="210" x2="210" y1="0" y2="0" stroke="#e78a48" stroke-width="4" stroke-linecap="round" marker-end="url(#arrowHead)" />
+            <text id="forceLabel" x="232" y="0" fill="#a85d2e" font-size="13" font-weight="700">Force</text>
+          </svg>
+        </div>
+        <div class="scene-footnote">
+          <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/><path d="M10 9v5m0-8h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span>The dashed marker shows the resting length; measurements follow the moving end.</span>
+        </div>
+      </article>
+
+      <article class="card controls-card">
+        <h2>Set up the experiment</h2>
+        <p class="section-note">Change one value at a time to compare the response.</p>
+
+        <div class="control">
+          <div class="control-top">
+            <label for="stiffness">Spring constant</label>
+            <output class="value" id="stiffnessValue" for="stiffness">45 N/m</output>
+          </div>
+          <p class="control-help" id="stiffnessHelp">Higher values make the spring stiffer.</p>
+          <input id="stiffness" type="range" min="20" max="100" step="1" value="45" aria-describedby="stiffnessRange stiffnessHelp">
+          <div class="range-ends" id="stiffnessRange"><span>20 N/m · softer</span><span>100 N/m · stiffer</span></div>
+        </div>
+
+        <div class="control">
+          <div class="control-top">
+            <label for="restLength">Resting length</label>
+            <output class="value" id="restLengthValue" for="restLength">1.00 m</output>
+          </div>
+          <p class="control-help" id="restLengthHelp">The spring’s length with no load.</p>
+          <input id="restLength" type="range" min="0.60" max="1.40" step="0.01" value="1.00" aria-describedby="lengthRange restLengthHelp">
+          <div class="range-ends" id="lengthRange"><span>0.60 m</span><span>1.40 m</span></div>
+        </div>
+
+        <fieldset class="mode-picker">
+          <legend>Load type</legend>
+          <div class="mode-options">
+            <label class="mode-option"><input type="radio" name="loadMode" value="force" checked><span>Applied force</span></label>
+            <label class="mode-option"><input type="radio" name="loadMode" value="mass"><span>Hanging mass</span></label>
+          </div>
+        </fieldset>
+
+        <div class="control force-control" id="forceControl">
+          <div class="control-top">
+            <label for="appliedForce">Applied force</label>
+            <output class="value" id="forceValue" for="appliedForce">+7.0 N</output>
+          </div>
+          <p class="control-help" id="forceHelp">Positive pulls down; negative pushes up.</p>
+          <input id="appliedForce" type="range" min="-15" max="15" step="0.1" value="7" aria-describedby="forceRange forceHelp">
+          <div class="range-ends" id="forceRange"><span>−15 N · push up</span><span>+15 N · pull down</span></div>
+        </div>
+
+        <div class="control" id="massControl" hidden>
+          <div class="control-top">
+            <label for="hangingMass">Hanging mass</label>
+            <output class="value" id="massValue" for="hangingMass">0.70 kg</output>
+          </div>
+          <p class="control-help" id="massHelp">Gravity turns the mass into a downward weight.</p>
+          <input id="hangingMass" type="range" min="0.10" max="1.5" step="0.05" value="0.70" aria-describedby="massRange massHelp">
+          <div class="range-ends" id="massRange"><span>0.10 kg</span><span>1.50 kg</span></div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="applyButton" type="button">Apply and release</button>
+          <button class="secondary" id="pauseButton" type="button" disabled>Pause</button>
+          <button class="secondary" id="resetButton" type="button">Reset</button>
+        </div>
+
+        <p class="hint" id="motionHint">Pulling down stretches the spring. Push up to compress it.</p>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const stiffness = document.querySelector("#stiffness");
+      const restLength = document.querySelector("#restLength");
+      const appliedForce = document.querySelector("#appliedForce");
+      const hangingMass = document.querySelector("#hangingMass");
+      const forceControl = document.querySelector("#forceControl");
+      const massControl = document.querySelector("#massControl");
+      const stiffnessValue = document.querySelector("#stiffnessValue");
+      const restLengthValue = document.querySelector("#restLengthValue");
+      const forceValue = document.querySelector("#forceValue");
+      const massValue = document.querySelector("#massValue");
+      const loadMetricLabel = document.querySelector("#loadMetricLabel");
+      const loadReadout = document.querySelector("#loadReadout");
+      const lengthReadout = document.querySelector("#lengthReadout");
+      const changeReadout = document.querySelector("#changeReadout");
+      const motionState = document.querySelector("#motionState");
+      const motionHint = document.querySelector("#motionHint");
+      const springCoil = document.querySelector("#springCoil");
+      const restMarker = document.querySelector("#restMarker");
+      const restMarkerLabel = document.querySelector("#restMarkerLabel");
+      const endPlate = document.querySelector("#endPlate");
+      const massLabel = document.querySelector("#massLabel");
+      const endDot = document.querySelector("#endDot");
+      const forceArrow = document.querySelector("#forceArrow");
+      const forceLabel = document.querySelector("#forceLabel");
+      const centerLine = document.querySelector("#centerLine");
+      const applyButton = document.querySelector("#applyButton");
+      const pauseButton = document.querySelector("#pauseButton");
+      const resetButton = document.querySelector("#resetButton");
+
+      const forceModeMass = 0.45;
+      const gravity = 9.81;
+      const dampingRatio = 0.06;
+      const pixelsPerMeter = 140;
+      const topY = 96;
+      let displacement = 0;
+      let velocity = 0;
+      let running = false;
+      let paused = false;
+      let hasRun = false;
+      let frameId = 0;
+      let previousTime = 0;
+      let settledFrames = 0;
+
+      const number = (input) => Number(input.value);
+      const signed = (value, digits) => `${value > 0 ? "+" : value < 0 ? "−" : ""}${Math.abs(value).toFixed(digits)}`;
+
+      function getLoad() {
+        const mode = document.querySelector('input[name="loadMode"]:checked').value;
+        if (mode === "mass") {
+          const mass = number(hangingMass);
+          return { mode, force: mass * gravity, movingMass: mass };
+        }
+        return { mode, force: number(appliedForce), movingMass: forceModeMass };
+      }
+
+      function updateState(label, isRunning = false) {
+        motionState.textContent = label;
+        motionState.classList.toggle("running", isRunning);
+      }
+
+      function updateActionControls() {
+        applyButton.disabled = running || paused;
+        applyButton.textContent = running ? "In motion" : paused ? "Paused" : hasRun ? "Apply again" : "Apply and release";
+        pauseButton.disabled = !running && !paused;
+        pauseButton.textContent = paused ? "Resume" : "Pause";
+      }
+
+      function draw() {
+        const k = number(stiffness);
+        const baseLength = number(restLength);
+        const load = getLoad();
+        const force = load.force;
+        const currentLength = Math.max(0.12, baseLength + displacement);
+        const span = currentLength * pixelsPerMeter;
+        const bottomY = topY + span;
+        const restY = topY + baseLength * pixelsPerMeter;
+        const turns = 9;
+        const halfSteps = turns * 2;
+        const amplitude = 26;
+        let path = `M 210 ${topY}`;
+
+        for (let index = 1; index <= halfSteps; index += 1) {
+          const y = topY + (span * index) / (halfSteps + 1);
+          const x = index === halfSteps ? 210 : (index % 2 === 1 ? 210 - amplitude : 210 + amplitude);
+          path += ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
+        }
+        path += ` L 210 ${bottomY.toFixed(1)}`;
+        springCoil.setAttribute("d", path);
+        centerLine.setAttribute("y2", bottomY.toFixed(1));
+        restMarker.setAttribute("y1", restY.toFixed(1));
+        restMarker.setAttribute("y2", restY.toFixed(1));
+        restMarkerLabel.setAttribute("y", (restY + 4).toFixed(1));
+        const isMassMode = load.mode === "mass";
+        endPlate.setAttribute("x", isMassMode ? "174" : "168");
+        endPlate.setAttribute("y", (bottomY - (isMassMode ? 19 : 8)).toFixed(1));
+        endPlate.setAttribute("width", isMassMode ? "72" : "84");
+        endPlate.setAttribute("height", isMassMode ? "38" : "16");
+        endPlate.setAttribute("rx", isMassMode ? "8" : "7");
+        massLabel.setAttribute("y", (bottomY + 4).toFixed(1));
+        massLabel.setAttribute("visibility", isMassMode ? "visible" : "hidden");
+        massLabel.textContent = `${number(hangingMass).toFixed(2)} kg`;
+        endDot.setAttribute("cy", bottomY.toFixed(1));
+        endDot.setAttribute("visibility", isMassMode ? "hidden" : "visible");
+
+        const forceIsDown = force >= 0;
+        const startY = forceIsDown ? bottomY + (isMassMode ? 36 : 25) : bottomY + 92;
+        const endY = forceIsDown ? bottomY + 84 : bottomY + (isMassMode ? 36 : 33);
+        forceArrow.setAttribute("y1", startY.toFixed(1));
+        forceArrow.setAttribute("y2", endY.toFixed(1));
+        forceArrow.setAttribute("marker-start", "none");
+        forceArrow.setAttribute("marker-end", "url(#arrowHead)");
+        forceArrow.setAttribute("opacity", Math.abs(force) < 0.05 ? "0" : "1");
+        forceLabel.setAttribute("y", (bottomY + 62).toFixed(1));
+        forceLabel.textContent = Math.abs(force) < 0.05 ? "No load" : isMassMode ? "Weight" : forceIsDown ? "Pull" : "Push";
+
+        stiffnessValue.textContent = `${k.toFixed(0)} N/m`;
+        restLengthValue.textContent = `${baseLength.toFixed(2)} m`;
+        forceValue.textContent = `${signed(force, 1)} N`;
+        massValue.textContent = `${number(hangingMass).toFixed(2)} kg`;
+        loadMetricLabel.textContent = isMassMode ? "Weight (m × g)" : "Applied force";
+        loadReadout.innerHTML = `${isMassMode ? force.toFixed(1) : signed(force, 1)} <small>N</small>`;
+        lengthReadout.innerHTML = `${currentLength.toFixed(2)} <small>m</small>`;
+        changeReadout.innerHTML = `${signed(displacement, 2)} <small>m</small>`;
+
+        if (Math.abs(displacement) < 0.005) {
+          motionHint.textContent = isMassMode
+            ? "Gravity pulls the hanging mass down against the spring."
+            : "Pulling down stretches the spring. Push up to compress it.";
+        } else if (displacement > 0) {
+          motionHint.textContent = "The spring is stretched longer than its resting length.";
+        } else {
+          motionHint.textContent = "The spring is compressed shorter than its resting length.";
+        }
+      }
+
+      function stopAtRest(label = "At rest") {
+        if (frameId) cancelAnimationFrame(frameId);
+        frameId = 0;
+        running = false;
+        paused = false;
+        hasRun = false;
+        displacement = 0;
+        velocity = 0;
+        previousTime = 0;
+        settledFrames = 0;
+        updateState(label);
+        updateActionControls();
+        draw();
+      }
+
+      function animate(timestamp) {
+        if (!running) return;
+        frameId = 0;
+        if (!previousTime) previousTime = timestamp;
+        const elapsed = Math.min((timestamp - previousTime) / 1000, 0.04);
+        previousTime = timestamp;
+
+        const k = number(stiffness);
+        const load = getLoad();
+        const force = load.force;
+        const damping = 2 * dampingRatio * Math.sqrt(k * load.movingMass);
+        // Small integration steps keep the spring motion stable across frame rates.
+        let remaining = elapsed;
+        const step = 1 / 240;
+        while (remaining > 0) {
+          const dt = Math.min(step, remaining);
+          const acceleration = (force - k * displacement - damping * velocity) / load.movingMass;
+          velocity += acceleration * dt;
+          displacement += velocity * dt;
+          remaining -= dt;
+        }
+
+        if (Math.abs(displacement - force / k) < 0.002 && Math.abs(velocity) < 0.006) settledFrames += 1;
+        else settledFrames = 0;
+
+        if (settledFrames > 45) {
+          displacement = force / k;
+          velocity = 0;
+          running = false;
+          paused = false;
+          updateState("Settled");
+          updateActionControls();
+        }
+
+        draw();
+        if (running) frameId = requestAnimationFrame(animate);
+      }
+
+      function applyAndRelease() {
+        if (running || paused) return;
+        displacement = 0;
+        velocity = 0;
+        settledFrames = 0;
+        previousTime = 0;
+        hasRun = true;
+        running = true;
+        paused = false;
+        updateState("Moving", true);
+        updateActionControls();
+        frameId = requestAnimationFrame(animate);
+      }
+
+      function pauseOrResume() {
+        if (running) {
+          if (frameId) cancelAnimationFrame(frameId);
+          frameId = 0;
+          running = false;
+          paused = true;
+          previousTime = 0;
+          updateState("Paused");
+          updateActionControls();
+          return;
+        }
+        if (paused) {
+          paused = false;
+          running = true;
+          previousTime = 0;
+          updateState("Moving", true);
+          updateActionControls();
+          frameId = requestAnimationFrame(animate);
+        }
+      }
+
+      [stiffness, restLength, appliedForce, hangingMass].forEach((input) => {
+        input.addEventListener("input", () => {
+          stopAtRest();
+        });
+      });
+
+      document.querySelectorAll('input[name="loadMode"]').forEach((input) => {
+        input.addEventListener("change", () => {
+          const massMode = input.value === "mass" && input.checked;
+          forceControl.hidden = massMode;
+          massControl.hidden = !massMode;
+          stopAtRest();
+        });
+      });
+
+      applyButton.addEventListener("click", applyAndRelease);
+      pauseButton.addEventListener("click", pauseOrResume);
+      resetButton.addEventListener("click", () => stopAtRest("At rest"));
+      updateActionControls();
+      draw();
+    })();
+  </script>
+</body>
+</html>
